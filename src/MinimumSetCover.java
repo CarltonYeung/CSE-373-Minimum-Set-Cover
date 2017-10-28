@@ -58,7 +58,8 @@ public class MinimumSetCover {
         
         // Print results
         printCover(minimumCover);
-        System.out.printf("\nFound %d subsets in %.3f seconds.\n", minimumCover.size(), (end - start) / 1000.0);
+        int size = (minimumCover == null)? 0 : minimumCover.size();
+        System.out.printf("\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
         
         System.exit(0);
     }
