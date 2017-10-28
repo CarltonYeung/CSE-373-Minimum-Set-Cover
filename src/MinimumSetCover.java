@@ -36,7 +36,7 @@ public class MinimumSetCover {
     private static int numberOfSubsets; // Number of subsets that can be used for the cover
     private static List<Set<Integer>> candidateSubsets; // List[i] = set of subset indices that contain i
     private static List<Set<Integer>> subsets; // List of all subsets with their elements
-    private static Map<Integer, Integer> minimumCover; // Set of subset indices
+    private static List<Integer> minimumCover; // Set of subset indices
     
     public static void main(String[] args) {
         Scanner s = new Scanner(System.in);
@@ -52,25 +52,29 @@ public class MinimumSetCover {
         // Run backtrack search
         readFile(fileNumber);
         findMinimumCover();
+        
+        if (minimumCover != null)
+            minimumCover.sort(Comparator.naturalOrder());
+    
+        printCover(minimumCover);
 
         // End timer
         final long end = System.currentTimeMillis();
         
         // Print results
-        printCover(minimumCover);
         int size = (minimumCover == null)? 0 : minimumCover.size();
-        System.out.printf("\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
+        System.out.printf("...\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
         
         System.exit(0);
     }
     
-    private static void printCover(Map<Integer, Integer> cover) {
+    private static void printCover(List<Integer> cover) {
         if (cover == null) {
             System.out.println("No cover exists.");
             return;
         }
-        Set<Integer> keys = cover.keySet();
-        for (int subsetNum : keys) {
+        
+        for (int subsetNum : cover) {
             System.out.printf("%d: ", subsetNum);
             Set<Integer> subset = subsets.get(subsetNum);
             for (int element : subset)
@@ -79,7 +83,7 @@ public class MinimumSetCover {
         }
     }
     
-    private static void backtrack(List<Deque<Integer>> solution, Map<Integer, Integer> cover, int index) {
+    private static void backtrack(List<Deque<Integer>> solution, List<Integer> cover, int index) {
         // Reject
         if (minimumCover != null && cover.size() >= minimumCover.size())
             return;
@@ -88,7 +92,7 @@ public class MinimumSetCover {
         if (index == universalSetSize + 1) {
             // Process cover
             if (minimumCover == null || cover.size() < minimumCover.size())
-                minimumCover = new TreeMap<>(cover);
+                minimumCover = new ArrayList<>(cover);
             return;
         }
         
@@ -103,14 +107,14 @@ public class MinimumSetCover {
                 // Add subset to cover
                 for (int element : candidateSubset)
                     solution.get(element).addFirst(subset);
-                cover.put(subset, subset);
+                cover.add(subset);
                 
                 backtrack(solution, cover, index + 1);
                 
                 // Remove subset from cover
                 for (int element : candidateSubset)
                     solution.get(element).removeFirst();
-                cover.remove(subset);
+                cover.remove(cover.size() - 1);
             }
         }
     }
@@ -121,7 +125,7 @@ public class MinimumSetCover {
         for (int i = 0; i <= universalSetSize; i++)
             solution.add(new ArrayDeque<>());
         
-        Map<Integer, Integer> cover = new HashMap<>(); // lots of inserting and deleting
+        List<Integer> cover = new ArrayList<>(); // lots of inserting and deleting
         
         backtrack(solution, cover, 1);
     }
