@@ -40,10 +40,9 @@ public class MinimumSetCover {
     
     public static void main(String[] args) {
         Scanner s = new Scanner(System.in);
-        
         System.out.print("Enter a file number [0, 24]: ");
         int fileNumber = s.nextInt();
-        
+        s.close();
         System.out.printf("Testing file %s\n...\n", fileName[fileNumber]);
 
         // Start timer
@@ -52,10 +51,8 @@ public class MinimumSetCover {
         // Run backtrack search
         readFile(fileNumber);
         findMinimumCover();
-        
         if (minimumCover != null)
             minimumCover.sort(Comparator.naturalOrder());
-    
         printCover(minimumCover);
 
         // End timer
@@ -64,7 +61,6 @@ public class MinimumSetCover {
         // Print results
         int size = (minimumCover == null)? 0 : minimumCover.size();
         System.out.printf("...\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
-        
         System.exit(0);
     }
     
