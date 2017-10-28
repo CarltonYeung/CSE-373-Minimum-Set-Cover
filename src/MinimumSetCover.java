@@ -41,10 +41,9 @@ public class MinimumSetCover {
     public static void main(String[] args) {
         final long start = System.currentTimeMillis();
         
-        int fileNumber = 0; // Which test file?
+        int fileNumber = 12; // Which test file?
         
         readFile(fileNumber);
-        //printAllSubsets();
         findMinimumCover();
         printCover(minimumCover);
         
@@ -55,8 +54,7 @@ public class MinimumSetCover {
     
     private static void processCover(Set<Integer> cover) {
         if (minimumCover == null || cover.size() < minimumCover.size()) {
-            minimumCover = new LinkedHashSet<>(cover);
-            //printCover(minimumCover);
+            minimumCover = new TreeSet<>(cover);
         }
     }
     
@@ -66,32 +64,22 @@ public class MinimumSetCover {
             return;
         }
         
-        System.out.println("# subsets used: " + cover.size());
-        
-        for (int subset : cover) {
-            System.out.printf("%d: ", subset);
-            for (int element : subsets.get(subset))
+        for (int subsetNum : cover) {
+            System.out.printf("%d: ", subsetNum);
+            Set<Integer> subset = subsets.get(subsetNum);
+            for (int element : subset)
                 System.out.print(element + " ");
             System.out.println();
         }
+    
+        System.out.println("# of subsets used: " + cover.size());
     }
     
-    private static Set<Integer> candidates(List<Integer> solution, Set<Integer> cover, int index) {
-        Set<Integer> candidates = new LinkedHashSet<>();
-        
-        if (index > universalSetSize)
-            return candidates;
-        
-        // Check if the element is already covered
-        if (solution.get(index) > 0) { // already have a subset to cover index
-            candidates.add(solution.get(index));
-            return candidates;
-        }
-        
+    private static Set<Integer> candidates(int index) {
         return candidateSubsets.get(index);
     }
     
-    private static boolean accept(Set<Integer> cover, int index) {
+    private static boolean accept(int index) {
         return index == universalSetSize + 1; // every element is covered
     }
     
@@ -100,42 +88,46 @@ public class MinimumSetCover {
         return minimumCover != null && cover.size() >= minimumCover.size();
     }
     
-    private static void backtrack(List<Integer> solution, Set<Integer> cover, int index) {
+    private static void backtrack(List<Deque<Integer>> solution, Set<Integer> cover, int index) {
         if (reject(cover))
             return;
         
-        if (accept(cover, index)) {
+        if (accept(index)) {
             processCover(cover);
             return;
         }
         
-        if (solution.get(index) > 0) { // already have a solution for this index
+        if (!solution.get(index).isEmpty()) // already have a solution for this index
             backtrack(solution, cover, index + 1);
-        } else {
-            for (int subset : candidates(solution, cover, index)) {
-                List<Integer> extSolution = new ArrayList<>(solution);
-                Set<Integer> extCover = new LinkedHashSet<>(cover);
+        else {
+            Set<Integer> candidates = candidateSubsets.get(index); // get candidates
+            
+            for (int subset : candidates) {
+                Set<Integer> candidateSubset = subsets.get(subset);
                 
-                // Use subset to cover everything it can starting at index
-                for (int element : subsets.get(subset)) {
-                    if (element >= index)
-                        extSolution.set(element, subset); // use subset to cover element
-                }
-                extCover.add(subset); // add subset to cover
-                backtrack(extSolution, extCover, index + 1);
+                for (int element : candidateSubset)
+                    solution.get(element).addFirst(subset);
+                
+                cover.add(subset);
+                
+                backtrack(solution, cover, index + 1);
+                
+                for (int element : candidateSubset)
+                    solution.get(element).removeFirst();
+                
+                cover.remove(subset);
             }
         }
     }
     
     private static void findMinimumCover() {
-        ArrayList<Integer> solution = new ArrayList<>(universalSetSize + 1);
-        for (int i = 0; i < universalSetSize + 1; i++)
-            solution.add(0);
-        solution.set(0, null); // Index 0 should never be used
+        List<Deque<Integer>> solution = new ArrayList<>(universalSetSize + 1);
+        for (int i = 0; i <= universalSetSize; i++)
+            solution.add(new ArrayDeque<>());
         
-        HashSet<Integer> subsetsUsed = new LinkedHashSet<>();
+        Set<Integer> cover = new LinkedHashSet<>();
         
-        backtrack(solution, subsetsUsed, 1);
+        backtrack(solution, cover, 1);
     }
     
     private static void readFile(int fileNumber) {
@@ -152,13 +144,12 @@ public class MinimumSetCover {
         universalSetSize = s.nextInt();
         numberOfSubsets = s.nextInt();
         
-        candidateSubsets = new ArrayList<>(universalSetSize);
-        candidateSubsets.add(0, null); // index 0 is used as placeholder
-        for (int i = 1; i <= universalSetSize; i++)
+        candidateSubsets = new ArrayList<>();
+        for (int i = 0; i <= universalSetSize; i++)
             candidateSubsets.add(new LinkedHashSet<>());
         
-        subsets = new ArrayList<>(numberOfSubsets);
-        subsets.add(0, null); // index 0 is used as placeholder
+        subsets = new ArrayList<>();
+        subsets.add(null); // index 0 should never be used
     
         s.nextLine();
         String[] line;
@@ -167,9 +158,9 @@ public class MinimumSetCover {
             subsets.add(new LinkedHashSet<>()); // add a new subset
             for (String token : line) {
                 if (!token.isEmpty()) { // not empty set
-                    int number = Integer.parseInt(token);
-                    candidateSubsets.get(number).add(subset);
-                    subsets.get(subset).add(number);
+                    int element = Integer.parseInt(token);
+                    candidateSubsets.get(element).add(subset);
+                    subsets.get(subset).add(element);
                 }
             }
         }
@@ -179,9 +170,9 @@ public class MinimumSetCover {
     
     private static void printAllSubsets() {
         for (int i = 1; i <= numberOfSubsets; i++) {
-            for (int element : subsets.get(i)) {
+            Set<Integer> subset = subsets.get(i);
+            for (int element : subset)
                 System.out.printf("%d ", element);
-            }
             System.out.println();
         }
     }
