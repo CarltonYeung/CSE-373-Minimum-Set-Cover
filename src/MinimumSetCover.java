@@ -5,31 +5,31 @@ import java.util.*;
 public class MinimumSetCover {
     final private static String path = "http://www3.cs.stonybrook.edu/~skiena/373/setcover/";
     final private static String[] fileName = {
-            "s-X-12-6",
-            "s-k-100-175",
-            "s-k-150-225",
-            "s-k-150-250",
-            "s-k-20-30",
-            "s-k-20-35",
-            "s-k-200-300",
-            "s-k-30-50",
-            "s-k-30-55",
-            "s-k-35-65",
-            "s-k-40-60",
-            "s-k-40-80",
-            "s-k-50-100",
-            "s-k-50-95",
-            "s-rg-109-35",
-            "s-rg-118-30",
-            "s-rg-155-40",
-            "s-rg-197-45",
-            "s-rg-245-50",
-            "s-rg-31-15",
-            "s-rg-40-20",
-            "s-rg-413-75",
-            "s-rg-63-25",
-            "s-rg-733-100",
-            "s-rg-8-10"
+            "s-X-12-6",        // 0
+            "s-k-100-175",     // 1
+            "s-k-150-225",     // 2
+            "s-k-150-250",     // 3
+            "s-k-20-30",       // 4
+            "s-k-20-35",       // 5
+            "s-k-200-300",     // 6
+            "s-k-30-50",       // 7
+            "s-k-30-55",       // 8
+            "s-k-35-65",       // 9
+            "s-k-40-60",       // 10
+            "s-k-40-80",       // 11
+            "s-k-50-100",      // 12
+            "s-k-50-95",       // 13
+            "s-rg-109-35",     // 14
+            "s-rg-118-30",     // 15
+            "s-rg-155-40",     // 16
+            "s-rg-197-45",     // 17
+            "s-rg-245-50",     // 18
+            "s-rg-31-15",      // 19
+            "s-rg-40-20",      // 20
+            "s-rg-413-75",     // 21
+            "s-rg-63-25",      // 22
+            "s-rg-733-100",    // 23
+            "s-rg-8-10"        // 24
     };
     
     private static int universalSetSize; // Number of elements in the universal set
@@ -39,6 +39,8 @@ public class MinimumSetCover {
     private static Set<Integer> minimumCover; // Set of subset indices
     
     public static void main(String[] args) {
+        final long start = System.currentTimeMillis();
+        
         int fileNumber = 0; // Which test file?
         
         readFile(fileNumber);
@@ -46,12 +48,16 @@ public class MinimumSetCover {
         findMinimumCover();
         printCover(minimumCover);
         
+        final long end = System.currentTimeMillis();
+        System.out.printf("Time taken: %.3fs\n", (end - start) / 1000.0);
         System.exit(0);
     }
     
     private static void processCover(Set<Integer> cover) {
-        if (minimumCover == null || cover.size() < minimumCover.size())
+        if (minimumCover == null || cover.size() < minimumCover.size()) {
             minimumCover = new LinkedHashSet<>(cover);
+            //printCover(minimumCover);
+        }
     }
     
     private static void printCover(Set<Integer> cover) {
@@ -70,47 +76,54 @@ public class MinimumSetCover {
         }
     }
     
-    private static Set<Integer> candidates(Set<Integer> subsetsUsed, int index) {
+    private static Set<Integer> candidates(List<Integer> solution, Set<Integer> cover, int index) {
         Set<Integer> candidates = new LinkedHashSet<>();
         
         if (index > universalSetSize)
             return candidates;
         
         // Check if the element is already covered
-        for (int subset : subsetsUsed) {
-            for (int element : subsets.get(subset)) {
-                if (index == element) {
-                    candidates.add(subset);
-                    return candidates;
-                }
-            }
+        if (solution.get(index) > 0) { // already have a subset to cover index
+            candidates.add(solution.get(index));
+            return candidates;
         }
         
         return candidateSubsets.get(index);
     }
     
-    private static boolean accept(Set<Integer> subsetsUsed, int index) {
+    private static boolean accept(Set<Integer> cover, int index) {
         return index == universalSetSize + 1; // every element is covered
     }
     
-    private static boolean reject(Set<Integer> subsetsUsed) {
-        return false;
+    private static boolean reject(Set<Integer> cover) {
+        // Reject if cover is not better than minimum
+        return minimumCover != null && cover.size() >= minimumCover.size();
     }
     
-    private static void backtrack(List<Integer> solution, Set<Integer> subsetsUsed, int index) {
-        if (reject(subsetsUsed))
+    private static void backtrack(List<Integer> solution, Set<Integer> cover, int index) {
+        if (reject(cover))
             return;
         
-        if (accept(subsetsUsed, index))
-            processCover(subsetsUsed);
+        if (accept(cover, index)) {
+            processCover(cover);
+            return;
+        }
         
-        for (int subset : candidates(subsetsUsed, index)) {
-            List<Integer> extendedSolution = new ArrayList<>(solution);
-            extendedSolution.set(index, subset); // use subset to cover index
-            
-            Set<Integer> extendedSubsetsUsed = new LinkedHashSet<>(subsetsUsed);
-            extendedSubsetsUsed.add(subset);
-            backtrack(extendedSolution, extendedSubsetsUsed, index + 1);
+        if (solution.get(index) > 0) { // already have a solution for this index
+            backtrack(solution, cover, index + 1);
+        } else {
+            for (int subset : candidates(solution, cover, index)) {
+                List<Integer> extSolution = new ArrayList<>(solution);
+                Set<Integer> extCover = new LinkedHashSet<>(cover);
+                
+                // Use subset to cover everything it can starting at index
+                for (int element : subsets.get(subset)) {
+                    if (element >= index)
+                        extSolution.set(element, subset); // use subset to cover element
+                }
+                extCover.add(subset); // add subset to cover
+                backtrack(extSolution, extCover, index + 1);
+            }
         }
     }
     
@@ -153,9 +166,11 @@ public class MinimumSetCover {
             line = s.nextLine().trim().split("\\s+");
             subsets.add(new LinkedHashSet<>()); // add a new subset
             for (String token : line) {
-                int number = Integer.parseInt(token);
-                candidateSubsets.get(number).add(subset);
-                subsets.get(subset).add(number);
+                if (!token.isEmpty()) { // not empty set
+                    int number = Integer.parseInt(token);
+                    candidateSubsets.get(number).add(subset);
+                    subsets.get(subset).add(number);
+                }
             }
         }
         
