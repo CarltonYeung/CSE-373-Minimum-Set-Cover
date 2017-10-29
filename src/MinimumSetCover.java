@@ -79,7 +79,7 @@ public class MinimumSetCover {
         }
     }
     
-    private static void backtrack(List<Deque<Integer>> solution, List<Integer> cover, int index) {
+    private static void backtrack(int[] solution, List<Integer> cover, int index) {
         // Reject
         if (minimumCover != null && cover.size() >= minimumCover.size())
             return;
@@ -92,7 +92,7 @@ public class MinimumSetCover {
             return;
         }
         
-        if (!solution.get(index).isEmpty()) // already have a solution for this index
+        if (solution[index] > 0) // already have a solution for this index
             backtrack(solution, cover, index + 1);
         else {
             Set<Integer> candidates = candidateSubsets.get(index); // get candidates
@@ -101,25 +101,24 @@ public class MinimumSetCover {
                 Set<Integer> candidateSubset = subsets.get(subset);
                 
                 // Add subset to cover
-                for (int element : candidateSubset)
-                    solution.get(element).addFirst(subset);
                 cover.add(subset);
+                for (int element : candidateSubset)
+                    if (element >= index)
+                        solution[element]++;
                 
                 backtrack(solution, cover, index + 1);
                 
                 // Remove subset from cover
-                for (int element : candidateSubset)
-                    solution.get(element).removeFirst();
                 cover.remove(cover.size() - 1);
+                for (int element : candidateSubset)
+                    if (element >= index)
+                        solution[element]--;
             }
         }
     }
     
     private static void findMinimumCover() {
-        // Array of stacks where each stack contains the subsets that cover the index into the array
-        List<Deque<Integer>> solution = new ArrayList<>(universalSetSize + 1);
-        for (int i = 0; i <= universalSetSize; i++)
-            solution.add(new ArrayDeque<>());
+        int[] solution = new int[universalSetSize + 1]; // solution[i] = number of subsets in the cover that contain i
         
         List<Integer> cover = new ArrayList<>(); // lots of inserting and deleting
         
