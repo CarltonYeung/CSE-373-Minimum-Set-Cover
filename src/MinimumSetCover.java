@@ -108,15 +108,16 @@ public class MinimumSetCover {
                 // Add subset to cover
                 cover[coverSize++] = candidateSubsetIndex; // add to tail
                 for (int element : candidateSubset)
-                    if (element >= index)
+                    if (element >= index) // don't bother with earlier elements that have already been solved
                         solution[element]++; // 1 more subset covers this element
                 
+                // Extend the solution
                 backtrack(solution, cover, coverSize, index + 1);
                 
                 // Remove subset from cover
-                cover[--coverSize] = 0; // remove from tail
+                coverSize--; // remove from tail
                 for (int element : candidateSubset)
-                    if (element >= index)
+                    if (element >= index) // don't bother with earlier elements that have already been solved
                         solution[element]--; // 1 less subset covers this element
             }
         }
@@ -145,28 +146,28 @@ public class MinimumSetCover {
         candidateSubsets = new int[universalSetSize + 1][];
         for (int i = 0; i <= universalSetSize; i++)
             candidateSubsets[i] = new int[numberOfSubsets];
-        candidateSubsets[0] = null; // fail-fast; index 0 should never be accessed
         
         candidateSubsetsSize = new int[candidateSubsets.length];
         
         subsets = new int[numberOfSubsets + 1][];
-        subsets[0] = null; // fail-fast; index 0 should never be accessed;
     
         s.nextLine();
         String[] line;
+        int element;
+        int i;
+        
         for (int subset = 1; subset <= numberOfSubsets; subset++) {
             line = s.nextLine().trim().split("\\s+");
             subsets[subset] = new int[line.length]; // add a new subset
-            int i = 0; // index for subsets
+            i = 0; // index for subsets
             for (String token : line) {
                 if (!token.isEmpty()) { // not empty set
-                    int element = Integer.parseInt(token);
+                    element = Integer.parseInt(token);
                     candidateSubsets[element][candidateSubsetsSize[element]++] = subset;
                     subsets[subset][i++] = element;
                 }
             }
         }
-        
         s.close();
     }
 }
