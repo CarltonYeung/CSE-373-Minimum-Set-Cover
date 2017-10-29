@@ -32,12 +32,12 @@ public class MinimumSetCover {
             "s-rg-8-10"        // 24
     };
     
-    private static int universalSetSize; // Number of elements in the universal set
-    private static int numberOfSubsets; // Number of subsets that can be used for the cover
-    private static int[][] candidateSubsets; // jagged array of subset indices that contain i
-    private static int[] candidateSubsetsSize; // size of each candidateSubsets[i]
-    private static int[][] subsets; // jagged array of all subsets with their elements
-    private static List<Integer> minimumCover; // Set of subset indices
+    private static int universalSetSize;         // number of elements in the universal set
+    private static int numberOfSubsets;          // number of subsets that can be used for the cover
+    private static int[][] candidateSubsets;     // jagged array of subset indices that contain i
+    private static int[] candidateSubsetsSize;   // size of each candidateSubsets[i]
+    private static int[][] subsets;              // jagged array of all subsets with their elements
+    private static int[] minimumCover;           // array of subset indices
     
     public static void main(String[] args) {
         Scanner s = new Scanner(System.in);
@@ -52,20 +52,19 @@ public class MinimumSetCover {
         // Run backtrack search
         readFile(fileNumber);
         findMinimumCover();
-        if (minimumCover != null)
-            minimumCover.sort(Comparator.naturalOrder());
+        Arrays.sort(minimumCover);
         printCover(minimumCover);
 
         // End timer
         final long end = System.currentTimeMillis();
         
         // Print results
-        int size = (minimumCover == null)? 0 : minimumCover.size();
+        int size = (minimumCover == null)? 0 : minimumCover.length;
         System.out.printf("...\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
         System.exit(0);
     }
     
-    private static void printCover(List<Integer> cover) {
+    private static void printCover(int[] cover) {
         if (cover == null) {
             System.out.println("No cover exists.");
             return;
@@ -80,36 +79,38 @@ public class MinimumSetCover {
         }
     }
     
-    private static void backtrack(int[] solution, List<Integer> cover, int index) {
+    private static void backtrack(int[] solution, int[] cover, int coverSize, int index) {
         // Reject
-        if (minimumCover != null && cover.size() >= minimumCover.size())
+        if (minimumCover != null && coverSize >= minimumCover.length)
             return;
         
         // Accept
         if (index == universalSetSize + 1) {
             // Process cover
-            if (minimumCover == null || cover.size() < minimumCover.size())
-                minimumCover = new ArrayList<>(cover);
+            if (minimumCover == null || coverSize < minimumCover.length) {
+                minimumCover = new int[coverSize];
+                System.arraycopy(cover, 0, minimumCover, 0, coverSize);
+            }
             return;
         }
         
         if (solution[index] > 0) // already have a solution for this index
-            backtrack(solution, cover, index + 1);
+            backtrack(solution, cover, coverSize, index + 1);
         else {
             for (int i = 0; i < candidateSubsetsSize[index]; i++) {
                 int candidateSubsetIndex = candidateSubsets[index][i];
                 int[] candidateSubset = subsets[candidateSubsetIndex];
                 
                 // Add subset to cover
-                cover.add(candidateSubsetIndex); // add to tail
+                cover[coverSize++] = candidateSubsetIndex; // add to tail
                 for (int element : candidateSubset)
                     if (element >= index)
                         solution[element]++; // 1 more subset covers this element
                 
-                backtrack(solution, cover, index + 1);
+                backtrack(solution, cover, coverSize, index + 1);
                 
                 // Remove subset from cover
-                cover.remove(cover.size() - 1); // remove from tail
+                cover[--coverSize] = 0; // remove from tail
                 for (int element : candidateSubset)
                     if (element >= index)
                         solution[element]--; // 1 less subset covers this element
@@ -119,8 +120,8 @@ public class MinimumSetCover {
     
     private static void findMinimumCover() {
         int[] solution = new int[universalSetSize + 1]; // solution[i] = number of subsets in the cover that contain i
-        List<Integer> cover = new ArrayList<>(); // lots of inserting and deleting
-        backtrack(solution, cover, 1);
+        int[] cover = new int[numberOfSubsets]; // lots of inserting and deleting
+        backtrack(solution, cover, 0, 1);
     }
     
     private static void readFile(int fileNumber) {
