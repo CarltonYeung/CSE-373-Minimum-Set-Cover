@@ -40,6 +40,7 @@ public class MinimumSetCover {
     private static int[] minimumCover;           // array of subset indices
     
     public static void main(String[] args) {
+        // Get user input for which file to test
         Scanner s = new Scanner(System.in);
         System.out.print("Enter a file number [0, 24]: ");
         int fileNumber = s.nextInt();
@@ -52,7 +53,10 @@ public class MinimumSetCover {
         // Run backtrack search
         readFile(fileNumber);
         findMinimumCover();
-        Arrays.sort(minimumCover);
+        
+        // Sort the result so it looks nice when printed
+        if (minimumCover != null)
+            Arrays.sort(minimumCover);
         printCover(minimumCover);
 
         // End timer
@@ -143,7 +147,7 @@ public class MinimumSetCover {
             candidateSubsets[i] = new int[numberOfSubsets];
         candidateSubsets[0] = null; // fail-fast; index 0 should never be accessed
         
-        candidateSubsetsSize = new int[universalSetSize + 1];
+        candidateSubsetsSize = new int[candidateSubsets.length];
         
         subsets = new int[numberOfSubsets + 1][];
         subsets[0] = null; // fail-fast; index 0 should never be accessed;
