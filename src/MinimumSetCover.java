@@ -34,7 +34,8 @@ public class MinimumSetCover {
     
     private static int universalSetSize; // Number of elements in the universal set
     private static int numberOfSubsets; // Number of subsets that can be used for the cover
-    private static List<Set<Integer>> candidateSubsets; // List[i] = set of subset indices that contain i
+    private static int[][] candidateSubsets; // jagged array of subset indices that contain i
+    private static int[] candidateSubsetsSize; // size of each candidateSubsets[i]
     private static int[][] subsets; // jagged array of all subsets with their elements
     private static List<Integer> minimumCover; // Set of subset indices
     
@@ -95,24 +96,23 @@ public class MinimumSetCover {
         if (solution[index] > 0) // already have a solution for this index
             backtrack(solution, cover, index + 1);
         else {
-            Set<Integer> candidates = candidateSubsets.get(index);
-            
-            for (int subset : candidates) {
-                int[] candidateSubset = subsets[subset];
+            for (int i = 0; i < candidateSubsetsSize[index]; i++) {
+                int candidateSubsetIndex = candidateSubsets[index][i];
+                int[] candidateSubset = subsets[candidateSubsetIndex];
                 
                 // Add subset to cover
-                cover.add(subset);
+                cover.add(candidateSubsetIndex); // add to tail
                 for (int element : candidateSubset)
                     if (element >= index)
-                        solution[element]++; // number of subsets in cover that contain element
+                        solution[element]++; // 1 more subset covers this element
                 
                 backtrack(solution, cover, index + 1);
                 
                 // Remove subset from cover
-                cover.remove(cover.size() - 1);
+                cover.remove(cover.size() - 1); // remove from tail
                 for (int element : candidateSubset)
                     if (element >= index)
-                        solution[element]--;
+                        solution[element]--; // 1 less subset covers this element
             }
         }
     }
@@ -137,22 +137,26 @@ public class MinimumSetCover {
         universalSetSize = s.nextInt();
         numberOfSubsets = s.nextInt();
         
-        candidateSubsets = new ArrayList<>();
+        candidateSubsets = new int[universalSetSize + 1][];
         for (int i = 0; i <= universalSetSize; i++)
-            candidateSubsets.add(new LinkedHashSet<>());
+            candidateSubsets[i] = new int[numberOfSubsets];
+        candidateSubsets[0] = null; // fail-fast; index 0 should never be accessed
+        
+        candidateSubsetsSize = new int[universalSetSize + 1];
         
         subsets = new int[numberOfSubsets + 1][];
+        subsets[0] = null; // fail-fast; index 0 should never be accessed;
     
         s.nextLine();
         String[] line;
         for (int subset = 1; subset <= numberOfSubsets; subset++) {
             line = s.nextLine().trim().split("\\s+");
             subsets[subset] = new int[line.length]; // add a new subset
-            int i = 0; // index for each element in a subset
+            int i = 0; // index for subsets
             for (String token : line) {
                 if (!token.isEmpty()) { // not empty set
                     int element = Integer.parseInt(token);
-                    candidateSubsets.get(element).add(subset);
+                    candidateSubsets[element][candidateSubsetsSize[element]++] = subset;
                     subsets[subset][i++] = element;
                 }
             }
