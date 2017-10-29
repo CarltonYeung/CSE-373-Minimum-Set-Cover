@@ -35,8 +35,8 @@ public class MinimumSetCover {
     private static int        universalSetSize;        // number of elements in the universal set
     private static int        numberOfSubsets;         // number of subsets that can be used for the cover
     private static int[][]    subsets;                 // jagged array of all subsets with their elements
-    private static int[][]    candidateSubsets;        // jagged array of subset nos. that can cover each no.
-    private static int[]      candidateSubsetsSize;    // size of each candidateSubsets[i]
+    private static int[][]    candidateSubsets;        // pseudo-jagged array of subset nos. that can cover each element
+    private static int[]      candidateSubsetsSize;    // keep track of how many subsets cover each element
     private static int[]      minimumCover;            // array of subset nos.
     
     public static void main(String[] args) {
