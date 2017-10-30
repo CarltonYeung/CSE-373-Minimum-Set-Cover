@@ -110,23 +110,19 @@ public class MinimumSetCover {
     
     private static void findMinimumCover() {
         int num = numberOfCandidates[1];
-        int[][] solution = new int[num][universalSetSize + 1]; // keep track of which elements are covered
-        int[][] cover = new int[num][numberOfSubsets]; // current subset cover
-        int[]   coverSize = new int[num];
-        Thread[] t = new Thread[num];
+        MyThread[] threads = new MyThread[num];
         
         for (int i = 0; i < num; i++) {
-            cover[i][coverSize[i]++] = candidateSubsets[1][i];
+            threads[i] = new MyThread(universalSetSize + 1, numberOfSubsets);
+            threads[i].cover[threads[i].coverSize++] = candidateSubsets[1][i];
             for (int j : subsets[candidateSubsets[1][i]])
-                solution[i][j]++;
-            
-            t[i] = new MyThread(solution[i], 2, cover[i], coverSize[i]);
-            t[i].start();
+                threads[i].solution[j]++;
+            threads[i].start();
         }
         
-        for (Thread thread : t) {
+        for (Thread t : threads) {
             try {
-                thread.join();
+                t.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

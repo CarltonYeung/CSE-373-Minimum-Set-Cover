@@ -1,11 +1,11 @@
 class MyThread extends Thread {
     int solution[], start, cover[], coverSize;
     
-    MyThread (int[] solution, int start, int[] cover, int coverSize) {
-        this.solution = solution;
-        this.start = start;
-        this.cover = cover;
-        this.coverSize = coverSize;
+    MyThread (int solutionSize, int numberOfSubsets) {
+        this.solution = new int[solutionSize];
+        this.start = 1;
+        this.cover = new int[numberOfSubsets];
+        this.coverSize = 0;
     }
     
     @Override
