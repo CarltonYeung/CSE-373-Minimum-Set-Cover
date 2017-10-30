@@ -4,20 +4,23 @@ import java.util.*;
 
 class MinimumSetCover {
     
-    private int        numberOfElements;        // number of elements in the universal set
-    private int        numberOfSubsets;         // number of subsets that can be used for the cover
-    private int[][]    subsets;                 // jagged array of all subsets with their elements
-    private int[][]    candidateSubsets;        // pseudo-jagged array of subset nos. that can cover each element
-    private int[]      candidateSubsetsSize;    // keep track of how many subsets cover each element
-    private int[]      minimumCover;            // array of subset nos.
+    private int numOfElements; // how many elements are in the universal set?
+    private int numOfSubsets; // how many subsets are there?
+    private int[][] subsets; // what are all the subsets?
+    private int[][] candidates; // which subsets can cover this element?
+    private int[] numOfCandidateSubsets; // how many subsets can cover this element?
+    private int[] minimumCover; // which subsets give a minimum cover?
     
     MinimumSetCover(URL url) {
         init(url);
     }
     
     int[] minimumCover() {
-        int[] solution = new int[numberOfElements + 1];
-        int[] cover = new int[numberOfSubsets];
+        if (!coverExists())
+            return null;
+        
+        int[] solution = new int[numOfElements + 1];
+        int[] cover = new int[numOfSubsets];
         
         backtrack(solution, 1, cover, 0);
         
@@ -35,17 +38,26 @@ class MinimumSetCover {
         for (int subsetNum : cover) {
             System.out.printf("%d: ", subsetNum);
             for (int element : subsets[subsetNum])
-                System.out.print(element + " ");
+                System.out.printf(" %d", element);
             System.out.println();
         }
         
         System.out.println("\nSize = " + cover.length);
     }
     
+    private boolean coverExists() {
+        for (int i = 1; i <= numOfElements; i++)
+            if (numOfCandidateSubsets[i] == 0)
+                return false;
+        return true;
+    }
+    
     private void backtrack(int[] solution, int start, int[] cover, int coverSize) {
         if (minimumCover != null && coverSize >= minimumCover.length) {
             return;
-        } else if (start == numberOfElements + 1) {
+        }
+        
+        if (start == numOfElements + 1) {
             minimumCover = new int[coverSize];
             System.arraycopy(cover, 0, minimumCover, 0, coverSize);
             return;
@@ -53,22 +65,23 @@ class MinimumSetCover {
         
         if (solution[start] > 0) {
             backtrack(solution, start + 1, cover, coverSize);
-        } else {
-            for (int i = 0; i < candidateSubsetsSize[start]; i++) {
-                
-                cover[coverSize++] = candidateSubsets[start][i];
-                for (int j : subsets[candidateSubsets[start][i]])
-                    if (j >= start)
-                        solution[j]++;
-                
-                backtrack(solution, start + 1, cover, coverSize);
-                
-                coverSize--;
-                for (int j : subsets[candidateSubsets[start][i]])
-                    if (j >= start)
-                        solution[j]--;
-            }
+            return;
         }
+        
+        for (int i = 0; i < numOfCandidateSubsets[start]; i++) {
+            cover[coverSize++] = candidates[start][i];
+            for (int j : subsets[candidates[start][i]])
+                if (j >= start)
+                    solution[j]++;
+            
+            backtrack(solution, start + 1, cover, coverSize);
+            
+            coverSize--;
+            for (int j : subsets[candidates[start][i]])
+                if (j >= start)
+                    solution[j]--;
+        }
+    
     }
     
     private void init(URL url) {
@@ -80,17 +93,17 @@ class MinimumSetCover {
             System.exit(-1);
         }
         
-        numberOfElements = scanner.nextInt();
-        numberOfSubsets = scanner.nextInt();
+        numOfElements = scanner.nextInt();
+        numOfSubsets = scanner.nextInt();
         scanner.nextLine();
         
-        candidateSubsets = new int[numberOfElements + 1][];
-        for (int i = 0; i <= numberOfElements; i++)
-            candidateSubsets[i] = new int[numberOfSubsets];
-        candidateSubsetsSize = new int[candidateSubsets.length];
-        subsets = new int[numberOfSubsets + 1][];
+        candidates = new int[numOfElements + 1][];
+        for (int i = 0; i <= numOfElements; i++)
+            candidates[i] = new int[numOfSubsets];
+        numOfCandidateSubsets = new int[candidates.length];
+        subsets = new int[numOfSubsets + 1][];
         
-        for (int i = 1; i <= numberOfSubsets; i++) {
+        for (int i = 1; i <= numOfSubsets; i++) {
             String[] line = scanner.nextLine().trim().split("\\s+");
             subsets[i] = new int[line.length];
             int subsetSize = 0;
@@ -98,7 +111,7 @@ class MinimumSetCover {
             for (String token : line) {
                 if (!token.isEmpty()) {
                     int element = Integer.parseInt(token);
-                    candidateSubsets[element][candidateSubsetsSize[element]++] = i;
+                    candidates[element][numOfCandidateSubsets[element]++] = i;
                     subsets[i][subsetSize++] = element;
                 }
             }

@@ -35,10 +35,10 @@ class Main {
     
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter a file number [0, 24]: ");
+        System.out.printf("Enter a file number [0, 24]: ");
         int fileNumber = scanner.nextInt();
         scanner.close();
-        System.out.printf("Testing file %s\n...\n", fileName[fileNumber]);
+        System.out.printf("Testing file %s...\n\n", fileName[fileNumber]);
         
         final long start = System.currentTimeMillis();
         
@@ -51,12 +51,11 @@ class Main {
         }
         
         MinimumSetCover msc = new MinimumSetCover(url);
-        int[] cover = msc.minimumCover();
-        msc.print(cover);
+        msc.print(msc.minimumCover());
         
         final long end = System.currentTimeMillis();
         
-        System.out.printf("Search time = %.3f seconds.\n", (end - start) / 1000.0);
+        System.out.printf("Search time = %.3f seconds\n", (end - start) / 1000.0);
         System.exit(0);
     }
 }
