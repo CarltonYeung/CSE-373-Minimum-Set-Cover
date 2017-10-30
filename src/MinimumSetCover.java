@@ -76,7 +76,7 @@ public class MinimumSetCover {
         }
     }
     
-    static void backtrack(int[] solution, int start, int[] cover, int coverSize) {
+    static void backtrack(int[] solution, int start, int[] cover, int coverSize, int[] cs, int ncs) {
         if (minimumCover != null && coverSize >= minimumCover.length) {
             return;
         } else if (start == universalSetSize + 1) {
@@ -86,22 +86,30 @@ public class MinimumSetCover {
         }
         
         if (solution[start] > 0) { // already have a solution for this no.
-            backtrack(solution, start + 1, cover, coverSize);
+            backtrack(solution, start + 1, cover, coverSize, cs, ncs);
         } else {
-            for (int i = 0; i < numberOfCandidates[start]; i++) {
+            int[] candidates = candidateSubsets[start];
+            int size = numberOfCandidates[start];
+            
+            if (start == 1) { // multithreading support
+                candidates = cs;
+                size = ncs;
+            }
+            
+            for (int i = 0; i < size; i++) {
                 
                 // (1) Add subset to cover
-                cover[coverSize++] = candidateSubsets[start][i]; // "add the i'th candidate subset for start to the cover"
-                for (int j : subsets[candidateSubsets[start][i]]) // cover as much as possible with this candidate
+                cover[coverSize++] = candidates[i]; // "add the i'th candidate subset for start to the cover"
+                for (int j : subsets[candidates[i]]) // cover as much as possible with this candidate
                     if (j >= start) // don't bother with earlier elements that have already been solved
                         solution[j]++; // 1 more subset covers this element
                 
                 // Go further down the solution tree
-                backtrack(solution, start + 1, cover, coverSize);
+                backtrack(solution, start + 1, cover, coverSize, cs, ncs);
                 
                 // (2) Remove subset from cover; undo (1)
                 coverSize--;
-                for (int j : subsets[candidateSubsets[start][i]])
+                for (int j : subsets[candidates[i]])
                     if (j >= start)
                         solution[j]--;
             }
@@ -109,16 +117,21 @@ public class MinimumSetCover {
     }
     
     private static void findMinimumCover() {
-        int num = numberOfCandidates[1];
-        MyThread[] threads = new MyThread[num];
+        MyThread[] threads = new MyThread[2]; // 2 threads
         
-        for (int i = 0; i < num; i++) {
-            threads[i] = new MyThread(universalSetSize + 1, numberOfSubsets);
-            threads[i].cover[threads[i].coverSize++] = candidateSubsets[1][i];
-            for (int j : subsets[candidateSubsets[1][i]])
-                threads[i].solution[j]++;
-            threads[i].start();
-        }
+        int split = numberOfCandidates[1] / 2;
+        int ncs = split;
+        int[] cs = new int[ncs];
+        
+        System.arraycopy(candidateSubsets[1], 0, cs, 0, split);
+        threads[0] = new MyThread(universalSetSize + 1, numberOfSubsets, cs, split);
+        threads[0].start();
+    
+        ncs = numberOfCandidates[1] - split;
+        cs = new int[ncs];
+        System.arraycopy(candidateSubsets[1], split, cs, 0, ncs);
+        threads[1] = new MyThread(universalSetSize + 1, numberOfSubsets, cs, ncs);
+        threads[1].start();
         
         for (Thread t : threads) {
             try {
