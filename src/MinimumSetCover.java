@@ -36,7 +36,7 @@ public class MinimumSetCover {
     private static int        numberOfSubsets;         // number of subsets that can be used for the cover
     private static int[][]    subsets;                 // jagged array of all subsets with their elements
     private static int[][]    candidateSubsets;        // pseudo-jagged array of subset nos. that can cover each element
-    private static int[]      candidateSubsetsSize;    // keep track of how many subsets cover each element
+    private static int[]      numberOfCandidates;      // keep track of how many subsets cover each element
     private static int[]      minimumCover;            // array of subset nos.
     
     public static void main(String[] args) {
@@ -51,9 +51,7 @@ public class MinimumSetCover {
         readFile(fileNumber);
         findMinimumCover();
         
-        int size = 0;
         if (minimumCover != null) {
-            size = minimumCover.length;
             Arrays.sort(minimumCover);
             printCover(minimumCover);
         } else {
@@ -62,7 +60,10 @@ public class MinimumSetCover {
 
         final long end = System.currentTimeMillis();
         
-        System.out.printf("...\nFound %d subsets in %.3f seconds.\n", size, (end - start) / 1000.0);
+        System.out.printf("...\nFound %d subsets in %.3f seconds.\n",
+                (minimumCover == null)? 0 : minimumCover.length,
+                (end - start) / 1000.0);
+        
         System.exit(0);
     }
     
@@ -75,7 +76,7 @@ public class MinimumSetCover {
         }
     }
     
-    private static void backtrack(int[] solution, int start, int[] cover, int coverSize) {
+    static void backtrack(int[] solution, int start, int[] cover, int coverSize) {
         if (minimumCover != null && coverSize >= minimumCover.length) {
             return;
         } else if (start == universalSetSize + 1) {
@@ -87,7 +88,7 @@ public class MinimumSetCover {
         if (solution[start] > 0) { // already have a solution for this no.
             backtrack(solution, start + 1, cover, coverSize);
         } else {
-            for (int i = 0; i < candidateSubsetsSize[start]; i++) {
+            for (int i = 0; i < numberOfCandidates[start]; i++) {
                 
                 // (1) Add subset to cover
                 cover[coverSize++] = candidateSubsets[start][i]; // "add the i'th candidate subset for start to the cover"
@@ -108,10 +109,28 @@ public class MinimumSetCover {
     }
     
     private static void findMinimumCover() {
-        int[] solution = new int[universalSetSize + 1]; // keep track of which elements are covered
-        int[] cover = new int[numberOfSubsets]; // current subset cover
+        int num = numberOfCandidates[1];
+        int[][] solution = new int[num][universalSetSize + 1]; // keep track of which elements are covered
+        int[][] cover = new int[num][numberOfSubsets]; // current subset cover
+        int[]   coverSize = new int[num];
+        Thread[] t = new Thread[num];
         
-        backtrack(solution, 1, cover, 0);
+        for (int i = 0; i < num; i++) {
+            cover[i][coverSize[i]++] = candidateSubsets[1][i];
+            for (int j : subsets[candidateSubsets[1][i]])
+                solution[i][j]++;
+            
+            t[i] = new MyThread(solution[i], 2, cover[i], coverSize[i]);
+            t[i].start();
+        }
+        
+        for (Thread thread : t) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
     
     private static void readFile(int fileNumber) {
@@ -132,7 +151,7 @@ public class MinimumSetCover {
         for (int i = 0; i <= universalSetSize; i++)
             candidateSubsets[i] = new int[numberOfSubsets];
         
-        candidateSubsetsSize = new int[candidateSubsets.length];
+        numberOfCandidates = new int[candidateSubsets.length];
         
         subsets = new int[numberOfSubsets + 1][];
     
@@ -146,7 +165,7 @@ public class MinimumSetCover {
             for (String token : line) {
                 if (!token.isEmpty()) { // not empty set
                     int element = Integer.parseInt(token);
-                    candidateSubsets[element][candidateSubsetsSize[element]++] = subset;
+                    candidateSubsets[element][numberOfCandidates[element]++] = subset;
                     subsets[subset][subsetSize++] = element;
                 }
             }
