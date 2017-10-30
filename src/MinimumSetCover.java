@@ -21,8 +21,18 @@ class MinimumSetCover {
         
         int[] solution = new int[numOfElements + 1];
         int[] cover = new int[numOfSubsets];
+        int coverSize = 0;
         
-        backtrack(solution, 1, cover, 0);
+        for (int i = 1; i <= numOfElements; i++) {
+            if (numOfCandidateSubsets[i] == 1) {
+                cover[coverSize++] = candidates[i][0];
+                for (int j : subsets[candidates[i][0]])
+                    if (j >= i)
+                        solution[j]++;
+            }
+        }
+        
+        backtrack(solution, 1, cover, coverSize);
         
         return minimumCover;
     }
