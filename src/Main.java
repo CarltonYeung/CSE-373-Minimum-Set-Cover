@@ -51,11 +51,20 @@ class Main {
         }
         
         MinimumSetCover msc = new MinimumSetCover(url);
-        msc.print(msc.minimumCover());
+        int[] cover = msc.minimumCover();
+        msc.print(cover);
         
         final long end = System.currentTimeMillis();
         
         System.out.printf("Search time = %.3f seconds\n", (end - start) / 1000.0);
+    
+        try {
+            if (!msc.isCover(cover))
+                throw new Exception("Not a cover.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         System.exit(0);
     }
 }

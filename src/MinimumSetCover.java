@@ -27,11 +27,10 @@ class MinimumSetCover {
             if (numOfCandidateSubsets[i] == 1) {
                 cover[coverSize++] = candidates[i][0];
                 for (int j : subsets[candidates[i][0]])
-                    if (j >= i)
-                        solution[j]++;
+                    solution[j]++;
             }
         }
-        
+    
         backtrack(solution, 1, cover, coverSize);
         
         return minimumCover;
@@ -55,6 +54,20 @@ class MinimumSetCover {
         System.out.println("\nSize = " + cover.length);
     }
     
+    boolean isCover(int[] cover) {
+        int[] covered = new int[numOfElements + 1];
+        
+        for (int i : cover)
+            for (int j : subsets[i])
+                covered[j]++;
+        
+        for (int i = 1; i <= numOfElements; i++)
+            if (covered[i] == 0)
+                return false;
+        
+        return true;
+    }
+    
     private boolean coverExists() {
         for (int i = 1; i <= numOfElements; i++)
             if (numOfCandidateSubsets[i] == 0)
@@ -63,9 +76,8 @@ class MinimumSetCover {
     }
     
     private void backtrack(int[] solution, int start, int[] cover, int coverSize) {
-        if (minimumCover != null && coverSize >= minimumCover.length) {
+        if (minimumCover != null && coverSize >= minimumCover.length)
             return;
-        }
         
         if (start == numOfElements + 1) {
             minimumCover = new int[coverSize];
@@ -81,14 +93,14 @@ class MinimumSetCover {
         for (int i = 0; i < numOfCandidateSubsets[start]; i++) {
             cover[coverSize++] = candidates[start][i];
             for (int j : subsets[candidates[start][i]])
-                if (j >= start)
+//                if (j >= start)
                     solution[j]++;
             
             backtrack(solution, start + 1, cover, coverSize);
             
             coverSize--;
             for (int j : subsets[candidates[start][i]])
-                if (j >= start)
+//                if (j >= start)
                     solution[j]--;
         }
     
