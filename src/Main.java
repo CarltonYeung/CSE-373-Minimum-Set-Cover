@@ -34,12 +34,14 @@ class Main {
     };
     
     public static void main(String[] args) {
+        // Which file to test?
         Scanner scanner = new Scanner(System.in);
         System.out.printf("Enter a file number [0, 24]: ");
         int fileNumber = scanner.nextInt();
         scanner.close();
         System.out.printf("Testing file %s...\n\n", fileName[fileNumber]);
         
+        // Start time
         final long start = System.currentTimeMillis();
         
         URL url = null;
@@ -54,16 +56,20 @@ class Main {
         int[] cover = msc.minimumCover();
         msc.print(cover);
         
+        // End time
         final long end = System.currentTimeMillis();
         
-        System.out.printf("Search time = %.3f seconds\n", (end - start) / 1000.0);
-    
+        // I may never know if I got the minimum cover, but it should at least be a cover.
         try {
             if (!msc.isCover(cover))
-                throw new Exception("Not a cover.");
+                throw new Exception("Not a cover!");
         } catch (Exception e) {
+            System.out.flush();
             e.printStackTrace();
+            System.exit(-1);
         }
+        
+        System.out.printf("Search time = %.3f seconds\n", (end - start) / 1000.0);
         
         System.exit(0);
     }
