@@ -6,9 +6,9 @@ import java.util.*;
 
 class MinimumSetCover {
     
-    private int numOfElements; // How many elements are in the universal set?
-    private int numOfSubsets; // How many subsets are there?
-    private int[][] subsets; // What are all the subsets?
+    private int numOfElements;  // How many elements are in the universal set?
+    private int numOfSubsets;   // How many subsets are there?
+    private int[][] subsets;    // What are all the subsets?
     private int[][] candidates; // Which subsets can cover this element?
     private int[] minimumCover; // Which subsets give a minimum cover?
     
