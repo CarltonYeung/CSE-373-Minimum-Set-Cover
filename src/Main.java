@@ -1,10 +1,13 @@
+// Carlton Yeung
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Scanner;
 
 class Main {
     
-    final private static String path = "http://www3.cs.stonybrook.edu/~skiena/373/setcover/";
+    final private static String path =
+            "http://www3.cs.stonybrook.edu/~skiena/373/setcover/";
     final private static String[] fileName = {
             "s-X-12-6",        // 0
             "s-k-100-175",     // 1
@@ -34,15 +37,13 @@ class Main {
     };
     
     public static void main(String[] args) {
-        // Which file to test?
         Scanner scanner = new Scanner(System.in);
         System.out.printf("Enter a file number [0, 24]: ");
         int fileNumber = scanner.nextInt();
         scanner.close();
         System.out.printf("Testing file %s...\n\n", fileName[fileNumber]);
         
-        // Start time
-        final long start = System.currentTimeMillis();
+        final double start = System.currentTimeMillis();
         
         URL url = null;
         try {
@@ -56,10 +57,10 @@ class Main {
         int[] cover = msc.minimumCover();
         msc.print(cover);
         
-        // End time
-        final long end = System.currentTimeMillis();
+        final double end = System.currentTimeMillis();
+        final double timeTaken = (end - start) / 1000.0;
+        System.out.printf("Search time = %.3f seconds\n", timeTaken);
         
-        // I may never know if I got the minimum cover, but it should at least be a cover.
         try {
             if (!msc.isCover(cover))
                 throw new Exception("Not a cover!");
@@ -68,8 +69,6 @@ class Main {
             e.printStackTrace();
             System.exit(-1);
         }
-        
-        System.out.printf("Search time = %.3f seconds\n", (end - start) / 1000.0);
         
         System.exit(0);
     }
